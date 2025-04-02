@@ -1,6 +1,6 @@
-# Canvas Analytics Activity Extractor
+# Canvas Course Page View Count
 
-This tool extracts student activity data from the Canvas LMS analytics API. It retrieves the daily page view counts for each student in specified courses and outputs the data to CSV files.
+This tool retrieves the daily page view counts for each student in specified courses and outputs the data to CSV files.
 
 ## Features
 
