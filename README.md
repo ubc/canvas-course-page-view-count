@@ -143,7 +143,7 @@ If you're not seeing any analytics data for students:
 2. Check if you have the appropriate permissions to access analytics data
 
 ## Roll up the page views by day
-The `process_into_page_views_by_day.py` script will process the CSVs to roll up the views by day instead of by hour.
+The `process_into_page_views_by_day.py` script will process the page view CSVs to roll up the views by day instead of by hour.
 
 ```bash
 python process_into_page_views_by_day.py output --output_dir processed
