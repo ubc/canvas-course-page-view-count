@@ -1,10 +1,10 @@
-# Canvas Course Page View Count
+# Canvas Course Page View and Participation Count
 
-This tool retrieves the daily page view counts for each student in specified courses and outputs the data to CSV files.
+This tool retrieves page view and participation data for each student in specified courses and outputs the data to CSV files.  The page views are grouped hourly, while the participations are reported as individual events.
 
 ## Features
 
-- Extract daily page view statistics for all students in Canvas courses
+- Extract daily page view and participation statistics for all students in Canvas courses
 - Search for courses by name or specify course IDs directly
 - Process multiple courses concurrently with multithreading
 - Automatic pagination for handling large data sets
@@ -107,13 +107,16 @@ python index.py --threads 5
 
 ## Output
 
-For each course processed, a CSV file will be created in the output directory with the naming pattern `{course_id}_{course_name}_activity.csv`.
-
-The CSV contains the following columns:
-- `student_id`: Canvas user ID of the student
-- `student_name`: Name of the student
-- `date`: Date of activity in ISO format (YYYY-MM-DD)
-- `page_views`: Number of page views on that date
+1. For each course processed, a CSV file will be created in the output directory with the naming pattern `{course_id}_{course_name}_page_views.csv`.  The CSV contains the following columns:
+    - `student_id`: Canvas user ID of the student
+    - `student_name`: Name of the student
+    - `hour`: *Hour* of acitivity with local time zone specified (e.g., 2024-01-22T14:00:00-08:00)
+    - `page_views`: Number of page views during that hour
+2. For each course processed, a CSV file will be created in the output directory with the naming pattern `{course_id}_{course_name}_participations.csv`.  The CSV contains the following columns:
+    - `student_id`: Canvas user ID of the student
+    - `student_name`: Name of the student
+    - `timestamp`: Timestmp of activity in UTC (e.g., 2021-04-13T20:20:26Z)
+    - `url`: The URL associated with the participation event
 
 ## Troubleshooting
 

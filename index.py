@@ -1,7 +1,6 @@
 import os
 import csv
 import requests
-from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
@@ -224,23 +223,35 @@ def process_course(course_id: int, base_url: str, headers: Dict[str, str], outpu
 
         course_name = course.get("name", f"unknown-{course_id}")
 
-        # Clean course name for filename
+        # Clean course name for file name
         safe_name = "".join(c if c.isalnum() else "_" for c in course_name)
-        filename = f"{course_id}_{safe_name}_activity.csv"
-        output_path = os.path.join(output_dir, filename)
+
+        page_views_output_name = f"{course_id}_{safe_name}_page_views.csv"
+        participations_ouptut_name = f"{course_id}_{safe_name}_participations.csv"
+        page_views_output_path = os.path.join(output_dir, page_views_output_name)
+        participations_output_path = os.path.join(output_dir, participations_ouptut_name)
 
         # Get all students in the course
         print(f"Fetching students for course {course_id} ({course_name})...")
         students = get_course_students(base_url, headers, course_id)
         print(f"Processing {len(students)} students for course {course_id} ({course_name})")
 
-        # Initialize CSV file with headers
-        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = [
-                'student_id', 'student_name', 'date', 'page_views'
+        # Initialize both CSV files with headers
+        with open(page_views_output_path, 'w', newline='', encoding='utf-8') as pv_csv, \
+             open(participations_output_path, 'w', newline='', encoding='utf-8') as participations_csv:
+
+            page_views_fieldnames = [
+                'student_id', 'student_name', 'hour', 'page_views'
             ]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
+            participations_fieldnames = [
+                'student_id', 'student_name', 'timestamp', 'url'
+            ]
+
+            pv_writer = csv.DictWriter(pv_csv, fieldnames=page_views_fieldnames)
+            participations_writer = csv.DictWriter(participations_csv, fieldnames=participations_fieldnames)
+
+            pv_writer.writeheader()
+            participations_writer.writeheader()
 
             # Process each student
             for i, student in enumerate(students):
@@ -259,28 +270,42 @@ def process_course(course_id: int, base_url: str, headers: Dict[str, str], outpu
                         continue
 
                     page_views = activity_data.get('page_views', {})
+                    participations = activity_data.get('participations', [])
 
-                    if not page_views:
+                    # Write hourly page view counts to CSV
+                    if page_views:
+                        for hour, views in page_views.items():
+                            pv_writer.writerow({
+                                'student_id': student_id,
+                                'student_name': student_name,
+                                'hour': hour,
+                                'page_views': views
+                            })
+                        print(f"Recorded {len(page_views)} hours of page view activity for student {student_name}")
+                    else:
                         print(f"No page view data for student {student_name} (ID: {student_id})")
-                        continue
 
-                    # Write page views by date to CSV
-                    for date, views in page_views.items():
-                        writer.writerow({
+                    # Write participations (list of events) to separate CSV
+                    if participations:
+                        for participation in participations:
+                            participations_writer.writerow({
                             'student_id': student_id,
                             'student_name': student_name,
-                            'date': date,
-                            'page_views': views
+                            'timestamp': participation["created_at"],
+                            'url': participation["url"] if participation["url"] != "https://canvas.ubc.ca/api/graphql" else "unknown-discussion-post"
                         })
-
-                    print(f"Recorded {len(page_views)} hours of activity for student {student_name}")
+                        print(f"Recorded {len(participations)} participation events for student {student_name}")
+                    else:
+                        print(f"No participation data for student {student_name} (ID: {student_id})")
 
                 except Exception as e:
                     print(f"Error processing student {student_name} (ID: {student_id}): {str(e)}")
                     print("Continuing to next student...")
                     continue
 
-        print(f"Completed course {course_id} ({course_name}). Output saved to {output_path}")
+        print(f"Completed course {course_id} ({course_name}).")
+        print(f"Page views output saved to {page_views_output_path}")
+        print(f"Participations output saved to {participations_output_path}")
 
     except Exception as e:
         print(f"Error processing course {course_id}: {str(e)}")
