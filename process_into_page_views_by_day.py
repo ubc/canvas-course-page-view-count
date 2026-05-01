@@ -41,8 +41,8 @@ def process_csv(file_path: str, output_dir: str) -> None:
         pd.DataFrame(columns=['student_id', 'student_name', 'day', 'page_views']).to_csv(output_path, index=False)
         return
 
-    # Convert date column to Vancouver time
-    df['vancouver_time'] = df['date'].apply(convert_to_vancouver_time)
+    # Convert hour column to Vancouver time
+    df['vancouver_time'] = df['hour'].apply(convert_to_vancouver_time)
 
     # Extract date part only (no time)
     df['day'] = df['vancouver_time'].dt.date
@@ -72,7 +72,7 @@ def process_directory(input_dir: str, output_dir: str) -> None:
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Get all CSV files
-    csv_files = [f for f in os.listdir(input_dir) if f.lower().endswith('.csv')]
+    csv_files = [f for f in os.listdir(input_dir) if f.lower().endswith('page_views.csv')]
 
     if not csv_files:
         print(f"No CSV files found in {input_dir}")
